@@ -13,7 +13,7 @@ console.log('Starting the bot...');
 client.login(DISCORD_TOKEN);
 
 application.login(HOST, API_KEY, (logged_in, msg) => {
-    console.log('Log in status: ' + logged_in);
+    console.log('Pterodactyl log in status: ' + logged_in);
 });
 
 for (const file of commandFiles) {
@@ -26,14 +26,22 @@ client.on('message', (message) => {
     if (!message.content.startsWith(PREFIX) || message.author.bot) return;
 
     const args = message.content.slice(PREFIX.length).trim().split(/ +/);
-    const command = args.shift().toLowerCase();
+    const commandName = args.shift().toLowerCase();
 
-    if (!client.commands.has(command)) return;
+    if (!client.commands.has(commandName)) return;
+
+    const command = client.commands.get(commandName);
+
+    if (command.oneArg && args.length > 1) {
+        return message.channel.send(
+            `You have provided too many arguments, ${message.author}!`
+        );
+    }
 
     try {
-        client.commands.get(command).execute(message, args);
+        command.execute(message, args, PREFIX);
     } catch (error) {
+        message.reply('There was an error trying to execute that command!');
         console.error(error);
-        message.reply('there was an error trying to execute that command!');
     }
 });
